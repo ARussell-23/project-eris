@@ -27,3 +27,6 @@ poc_ingest.py
 # Logs
 *.log
 extract_function.py
+
+# Personal project documents
+project_docs/
