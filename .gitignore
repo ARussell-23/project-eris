@@ -1,0 +1,29 @@
+# Virtual environment
+venv/
+
+# Vector index (rebuilt on setup)
+data/
+
+# Personal documents (private)
+documents/
+
+# Temporary uploads
+uploads/
+
+# Generated files
+flagged_metadata_*.csv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mac system files
+.DS_Store
+
+# Test scripts
+test_*.py
+poc_ingest.py
+
+# Logs
+*.log
+extract_function.py

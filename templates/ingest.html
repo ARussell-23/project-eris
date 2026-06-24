@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>I.N.G.E.S.T. — Project ERIS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #EFEFEF;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    body.dark { background: #0D0D0D; color: #4ADB4A; }
+    .container { max-width: 680px; margin: 0 auto; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .header .label {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    body.dark .header .label { color: #2A4A2A; }
+    .header .wordmark {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    body.dark .header .wordmark { color: #4ADB4A; }
+    .header .subtitle { font-size: 12px; color: #666; letter-spacing: 0.02em; }
+    body.dark .header .subtitle { color: #3A7A3A; }
+    .mode-toggle {
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+      border: 0.5px solid #ccc;
+      color: #888;
+      font-family: "SF Mono", "Fira Mono", monospace;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    body.dark .mode-toggle { border-color: #2A2A2A; color: #3A7A3A; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .type-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .type-btn {
+      font-size: 13px;
+      padding: 6px 16px;
+      border: 0.5px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+    }
+    body.dark .type-btn { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
+    .type-btn.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    body.dark .type-btn.selected { background: #1A3A1A; color: #4ADB4A; border-color: #2A6A2A; }
+    .drop-zone {
+      border: 1.5px dashed #ccc;
+      border-radius: 8px;
+      background: #fff;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+    body.dark .drop-zone { background: #111; border-color: #2A2A2A; }
+    .drop-zone.dragover { border-color: #888; background: #f5f5f5; }
+    body.dark .drop-zone.dragover { background: #161616; }
+    .drop-zone i { font-size: 32px; color: #bbb; display: block; margin-bottom: 12px; }
+    body.dark .drop-zone i { color: #2A5A2A; }
+    .drop-zone p { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .drop-zone span { font-size: 13px; color: #888; }
+    body.dark .drop-zone span { color: #3A7A3A; }
+    .browse-btn {
+      font-size: 13px;
+      padding: 6px 16px;
+      border: 0.5px solid #ccc;
+      border-radius: 6px;
+      background: #EFEFEF;
+      cursor: pointer;
+      margin-top: 12px;
+      display: inline-block;
+    }
+    body.dark .browse-btn { background: #1A1A1A; border-color: #2A2A2A; color: #3A7A3A; }
+    .hint { font-size: 12px; color: #aaa; text-align: center; margin-bottom: 1.25rem; }
+    body.dark .hint { color: #2A4A2A; }
+    .file-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; }
+    .file-item {
+      background: #fff;
+      border-radius: 6px;
+      border: 0.5px solid #ddd;
+      border-left: 2px solid #888;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+    body.dark .file-item { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; color: #3A7A3A; }
+    .file-item i { color: #aaa; font-size: 16px; flex-shrink: 0; }
+    body.dark .file-item i { color: #2A5A2A; }
+    .confirm-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.25rem; }
+    .confirm-item {
+      background: #fff;
+      border-radius: 6px;
+      border: 0.5px solid #ddd;
+      border-left: 2px solid #888;
+      padding: 0.875rem 1rem;
+    }
+    body.dark .confirm-item { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; }
+    .confirm-item .filename {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+    body.dark .confirm-item .filename { color: #2A5A2A; }
+    .confirm-item .field-row { display: flex; gap: 8px; }
+    .confirm-item .field { flex: 1; }
+    .confirm-item .field label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+    body.dark .confirm-item .field label { color: #3A7A3A; }
+    .confirm-item .field input {
+      width: 100%;
+      font-size: 13px;
+      padding: 6px 8px;
+      border: 0.5px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+    }
+    body.dark .confirm-item .field input { background: #0D0D0D; border-color: #2A2A2A; color: #4ADB4A; }
+    .progress-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; }
+    .progress-item {
+      background: #fff;
+      border-radius: 6px;
+      border: 0.5px solid #ddd;
+      border-left: 2px solid #888;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    body.dark .progress-item { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; }
+    .progress-item.done { border-left-color: #5C8A6E; }
+    .progress-item.failed { border-left-color: #c0392b; }
+    .progress-item .info .title { font-size: 13px; font-weight: 500; }
+    body.dark .progress-item .info .title { color: #4ADB4A; }
+    .progress-item .info .meta { font-size: 12px; color: #aaa; }
+    body.dark .progress-item .info .meta { color: #2A5A2A; }
+    .progress-item .badge { font-size: 12px; flex-shrink: 0; color: #888; }
+    .progress-item.done .badge { color: #5C8A6E; }
+    .progress-item.failed .badge { color: #c0392b; }
+    .footer {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    body.dark .footer { border-color: #1A1A1A; }
+    .footer a { font-size: 11px; color: #aaa; text-decoration: none; letter-spacing: 0.06em; font-family: "SF Mono", "Fira Mono", monospace; }
+    body.dark .footer a { color: #2A5A2A; }
+    .btn {
+      font-size: 13px;
+      padding: 6px 16px;
+      border: 0.5px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+    }
+    body.dark .btn { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
+    .btn:hover { background: #f5f5f5; }
+    body.dark .btn:hover { background: #161616; }
+    .status-msg { font-size: 13px; color: #666; margin-bottom: 1rem; min-height: 20px; }
+    body.dark .status-msg { color: #3A7A3A; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <div class="header">
+        <p class="label">project eris</p>
+        <p class="wordmark">I.N.G.E.S.T.</p>
+        <p class="subtitle" id="subtitle">Intake, Normalization &amp; Generation of Embedded Source Text</p>
+      </div>
+      <button class="mode-toggle" id="mode-toggle" onclick="toggleMode()">DARK</button>
+    </div>
+
+    <div class="screen active" id="screen-upload">
+      <p style="font-size:13px; font-weight:500; margin-bottom:8px;">Batch type</p>
+      <div class="type-row">
+        <button class="type-btn" onclick="selectType('BOOK', this)">Book</button>
+        <button class="type-btn selected" onclick="selectType('ARTICLE', this)">Article</button>
+        <button class="type-btn" onclick="selectType('DOCUMENT', this)">Document</button>
+      </div>
+      <div class="drop-zone" id="drop-zone"
+        ondragover="handleDragOver(event)"
+        ondragleave="handleDragLeave(event)"
+        ondrop="handleDrop(event)"
+        onclick="document.getElementById('file-input').click()">
+        <i class="ti ti-file-upload"></i>
+        <p>Drop files here</p>
+        <span>or</span><br/>
+        <span class="browse-btn">Browse files</span>
+      </div>
+      <input type="file" id="file-input" multiple accept=".pdf,.docx,.pptx" style="display:none" onchange="handleFiles(this.files)" />
+      <p class="hint">.pdf · .docx · .pptx only — all other formats will be rejected</p>
+      <div class="file-list" id="file-list"></div>
+      <div class="status-msg" id="upload-status"></div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn" onclick="submitUpload()">
+          Next — confirm metadata
+          <i class="ti ti-arrow-right" style="vertical-align:-2px; margin-left:4px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-confirm">
+      <p style="font-size:13px; color:#666; margin-bottom:1.25rem;">Review and correct title and author before indexing.</p>
+      <div class="confirm-list" id="confirm-list"></div>
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn" onclick="showScreen('upload')">
+          <i class="ti ti-arrow-left" style="vertical-align:-2px; margin-right:4px;"></i>
+          Back
+        </button>
+        <button class="btn" onclick="submitConfirm()">
+          Confirm &amp; index
+          <i class="ti ti-arrow-right" style="vertical-align:-2px; margin-left:4px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-progress">
+      <div class="status-msg" id="progress-status">Indexing in progress — this may take a few minutes...</div>
+      <div class="progress-list" id="progress-list"></div>
+      <div style="display:flex; justify-content:flex-end;">
+        <a href="/guide" class="btn">
+          <i class="ti ti-arrow-left" style="vertical-align:-2px; margin-right:4px;"></i>
+          Back to search
+        </a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="/">← ERIS</a>
+    </div>
+  </div>
+
+  <script>
+    var selectedType = "ARTICLE";
+    var pendingFiles = [];
+    var selectedFiles = [];
+    var dark = localStorage.getItem("eris-dark") === "true";
+    if (dark) applyDark();
+
+    function toggleMode() {
+      dark = !dark;
+      localStorage.setItem("eris-dark", dark);
+      if (dark) applyDark(); else applyLight();
+    }
+    function applyDark() {
+      document.body.classList.add("dark");
+      document.getElementById("mode-toggle").textContent = "LIGHT";
+    }
+    function applyLight() {
+      document.body.classList.remove("dark");
+      document.getElementById("mode-toggle").textContent = "DARK";
+    }
+
+    function selectType(type, btn) {
+      selectedType = type;
+      document.querySelectorAll(".type-btn").forEach(function(b) { b.classList.remove("selected"); });
+      btn.classList.add("selected");
+    }
+
+    function showScreen(name) {
+      document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
+      document.getElementById("screen-" + name).classList.add("active");
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById("drop-zone").classList.add("dragover");
+    }
+    function handleDragLeave(e) {
+      document.getElementById("drop-zone").classList.remove("dragover");
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById("drop-zone").classList.remove("dragover");
+      handleFiles(e.dataTransfer.files);
+    }
+    function handleFiles(files) {
+      selectedFiles = Array.from(files);
+      var list = document.getElementById("file-list");
+      list.innerHTML = "";
+      selectedFiles.forEach(function(f) {
+        var item = document.createElement("div");
+        item.className = "file-item";
+        item.innerHTML = "<i class='ti ti-file-text'></i>" + f.name;
+        list.appendChild(item);
+      });
+    }
+
+    function submitUpload() {
+      if (selectedFiles.length === 0) {
+        document.getElementById("upload-status").textContent = "No files selected.";
+        return;
+      }
+      document.getElementById("upload-status").textContent = "Uploading...";
+      var formData = new FormData();
+      formData.append("doc_type", selectedType);
+      selectedFiles.forEach(function(f) { formData.append("files", f); });
+      fetch("/ingest/upload", { method: "POST", body: formData })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.error) { document.getElementById("upload-status").textContent = data.error; return; }
+          pendingFiles = data.pending;
+          buildConfirmScreen(pendingFiles);
+          showScreen("confirm");
+        })
+        .catch(function() {
+          document.getElementById("upload-status").textContent = "Upload failed — is the server running?";
+        });
+    }
+
+    function buildConfirmScreen(pending) {
+      var list = document.getElementById("confirm-list");
+      list.innerHTML = "";
+      pending.forEach(function(item, i) {
+        var div = document.createElement("div");
+        div.className = "confirm-item";
+        div.innerHTML =
+          "<p class='filename'>" + item.doc_type + " · " + item.filename + "</p>" +
+          "<div class='field-row'>" +
+          "<div class='field'><label>Title</label><input type='text' id='title-" + i + "' value='" + (item.title || "").replace(/'/g, "&#39;") + "' /></div>" +
+          "<div class='field'><label>Author</label><input type='text' id='author-" + i + "' placeholder='not found — please enter' value='" + (item.author || "").replace(/'/g, "&#39;") + "' /></div>" +
+          "</div>";
+        list.appendChild(div);
+      });
+    }
+
+    function submitConfirm() {
+      var confirmed = pendingFiles.map(function(item, i) {
+        return {
+          filename: item.filename,
+          pdf_path: item.pdf_path,
+          doc_type: item.doc_type,
+          title: document.getElementById("title-" + i).value.trim(),
+          author: document.getElementById("author-" + i).value.trim()
+        };
+      });
+      buildProgressScreen(confirmed);
+      showScreen("progress");
+      fetch("/ingest/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(confirmed)
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        document.getElementById("progress-status").textContent = "Indexing complete.";
+        data.results.forEach(function(result) {
+          var item = document.getElementById("progress-" + result.filename);
+          if (item) {
+            item.className = "progress-item " + (result.status === "ingested" ? "done" : "failed");
+            item.querySelector(".badge").textContent = result.status === "ingested" ? "ingested" : "failed";
+          }
+        });
+      })
+      .catch(function() {
+        document.getElementById("progress-status").textContent = "Something went wrong during indexing.";
+      });
+    }
+
+    function buildProgressScreen(confirmed) {
+      var list = document.getElementById("progress-list");
+      list.innerHTML = "";
+      confirmed.forEach(function(item) {
+        var div = document.createElement("div");
+        div.className = "progress-item";
+        div.id = "progress-" + item.filename;
+        div.innerHTML =
+          "<div class='info'>" +
+          "<p class='title'>" + (item.title || item.filename) + "</p>" +
+          "<p class='meta'>" + (item.author || "unknown") + " · " + item.doc_type + "</p>" +
+          "</div>" +
+          "<span class='badge'>indexing...</span>";
+        list.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
