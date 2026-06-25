@@ -1,5 +1,6 @@
 import os
 import csv
+import json
 from datetime import datetime
 from ingest.pdf_extract import extract_pdf_text
 from ingest.metadata import extract_metadata
@@ -14,11 +15,26 @@ FOLDER_TYPE_MAP = {
     DOCS_DIR:     "DOCUMENT"
 }
 
-def bulk_ingest(clear=False):
+PROGRESS_FILE = "ingest_progress.json"
+
+def load_progress():
+    """Loads the set of already-ingested filenames from the progress file."""
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, "r") as f:
+            return set(json.load(f))
+    return set()
+
+def save_progress(completed):
+    """Saves the set of completed filenames to the progress file."""
+    with open(PROGRESS_FILE, "w") as f:
+        json.dump(list(completed), f)
+
+def bulk_ingest(clear=False, resume=True):
     """
     Walks each document type folder and ingests all PDFs found.
     Logs files with missing/incomplete metadata to a review file.
-    Optionally clears the index before starting.
+    Optionally clears the index before starting (clear=True).
+    Optionally resumes from a previous run (resume=True).
     """
     if clear:
         from ingest.store import get_collection
@@ -31,7 +47,14 @@ def bulk_ingest(clear=False):
         except Exception:
             print("No existing index found — starting fresh.")
         client.get_or_create_collection(COLLECTION_NAME)
+        # Clear progress file too when clearing index
+        if os.path.exists(PROGRESS_FILE):
+            os.remove(PROGRESS_FILE)
         print()
+
+    completed = load_progress()
+    if completed and resume:
+        print(f"Resuming — {len(completed)} files already ingested, skipping.\n")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     flag_file = f"flagged_metadata_{timestamp}.csv"
@@ -40,6 +63,7 @@ def bulk_ingest(clear=False):
     total_files = 0
     total_chunks = 0
     failed = []
+    skipped = 0
 
     for folder, doc_type in FOLDER_TYPE_MAP.items():
         if not os.path.exists(folder):
@@ -52,11 +76,22 @@ def bulk_ingest(clear=False):
         print(f"\n── {doc_type}S ({len(files)} files) ──────────────────────")
 
         for i, filename in enumerate(files):
+            # Skip already completed files if resuming
+            if resume and filename in completed:
+                skipped += 1
+                continue
+
             pdf_path = os.path.join(folder, filename)
             print(f"[{i+1}/{len(files)}] {filename}")
 
             try:
                 pages = extract_pdf_text(pdf_path)
+
+                if not pages:
+                    print(f"    ✗ No text extracted — skipping")
+                    failed.append({"filename": filename, "error": "No text extracted"})
+                    continue
+
                 metadata = extract_metadata(pdf_path, doc_type)
 
                 # Flag incomplete metadata for later review
@@ -77,9 +112,20 @@ def bulk_ingest(clear=False):
                     doc_type=metadata["doc_type"],
                     source_file=metadata["source_file"]
                 )
+
+                if not chunks:
+                    print(f"    ✗ No chunks generated — skipping")
+                    failed.append({"filename": filename, "error": "No chunks generated"})
+                    continue
+
                 stored = store_chunks(chunks)
                 total_chunks += stored
                 total_files += 1
+
+                # Mark as completed and save progress
+                completed.add(filename)
+                save_progress(completed)
+
                 print(f"    ✓ {metadata['title'] or filename} — {metadata['author'] or 'unknown'}")
                 print(f"      {len(pages)} pages · {stored} chunks")
 
@@ -97,13 +143,22 @@ def bulk_ingest(clear=False):
 
     print(f"\n{'─' * 50}")
     print(f"Ingestion complete.")
-    print(f"Files processed: {total_files}")
-    print(f"Total chunks stored: {total_chunks}")
+    print(f"Files processed this run: {total_files}")
+    if skipped:
+        print(f"Files skipped (already indexed): {skipped}")
+    print(f"Total chunks stored this run: {total_chunks}")
 
     if failed:
         print(f"\nFailed files ({len(failed)}):")
         for f in failed:
             print(f"  - {f['filename']}: {f['error']}")
 
+    # Clean up progress file on successful completion
+    if not failed and os.path.exists(PROGRESS_FILE):
+        os.remove(PROGRESS_FILE)
+        print("\nProgress file cleared — full ingestion complete.")
+
 if __name__ == "__main__":
-    bulk_ingest(clear=True)
+    # Set clear=True to wipe and rebuild from scratch
+    # Set resume=True to pick up where a previous run left off
+    bulk_ingest(clear=False, resume=True)

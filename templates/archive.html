@@ -9,11 +9,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'SF Mono', 'Fira Mono', 'Courier New', monospace;
-      background: #EFEFEF;
-      color: #1a1a1a;
-      min-height: 100vh;
-      padding: 2rem;
-      transition: background 0.2s, color 0.2s;
+      background: #EFEFEF; color: #1a1a1a; min-height: 100vh;
+      padding: 2rem; transition: background 0.2s, color 0.2s;
     }
     body.dark { background: #0D0D0D; color: #4ADB4A; }
     .container { max-width: 680px; margin: 0 auto; }
@@ -21,100 +18,100 @@
     .version { font-size: 11px; color: #888; margin: 0 0 16px; letter-spacing: 0.08em; }
     body.dark .version { color: #2A4A2A; }
     .wordmark { font-size: 24px; font-weight: 500; margin: 0 0 4px; letter-spacing: 0.08em; }
+    body.dark .wordmark { color: #4ADB4A; }
     .subtitle { font-size: 12px; color: #666; margin: 0; letter-spacing: 0.04em; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
     body.dark .subtitle { color: #3A7A3A; }
     .mode-toggle {
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      background: transparent;
-      border: 0.5px solid #ccc;
-      color: #888;
-      font-family: 'SF Mono', 'Fira Mono', monospace;
-      margin-top: 4px;
-      flex-shrink: 0;
+      font-size: 11px; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 4px;
+      cursor: pointer; background: transparent; border: 0.5px solid #ccc; color: #888;
+      font-family: 'SF Mono', 'Fira Mono', monospace; margin-top: 4px; flex-shrink: 0;
     }
     body.dark .mode-toggle { border-color: #2A2A2A; color: #3A7A3A; }
-    .filter-row { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
-    .filter-row input {
-      flex: 1;
-      font-size: 13px;
-      padding: 7px 12px;
-      border: 0.5px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      outline: none;
-      min-width: 160px;
-    }
-    body.dark .filter-row input { background: #111; border-color: #2A2A2A; color: #4ADB4A; }
-    .type-btn {
-      font-size: 11px;
-      padding: 7px 12px;
-      border: 0.5px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-      cursor: pointer;
-      letter-spacing: 0.06em;
+    .tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .tab {
+      font-size: 11px; padding: 6px 14px; border: 0.5px solid #ddd; border-radius: 6px;
+      background: #fff; cursor: pointer; letter-spacing: 0.06em;
       font-family: 'SF Mono', 'Fira Mono', monospace;
     }
-    .type-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-    body.dark .type-btn { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
-    body.dark .type-btn.active { background: #1A3A1A; color: #4ADB4A; border-color: #2A6A2A; }
+    body.dark .tab { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
+    .tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    body.dark .tab.active { background: #1A3A1A; color: #4ADB4A; border-color: #2A6A2A; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .filter-row input {
+      flex: 1; font-size: 13px; padding: 7px 12px; border: 0.5px solid #ddd;
+      border-radius: 6px; background: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      outline: none; min-width: 160px;
+    }
+    body.dark .filter-row input { background: #111; border-color: #2A2A2A; color: #4ADB4A; }
+    .filter-row button {
+      font-size: 11px; padding: 7px 12px; border: 0.5px solid #ddd; border-radius: 6px;
+      background: #fff; cursor: pointer; letter-spacing: 0.06em;
+      font-family: 'SF Mono', 'Fira Mono', monospace;
+    }
+    body.dark .filter-row button { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
+    .filter-row button.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    body.dark .filter-row button.active { background: #1A3A1A; color: #4ADB4A; border-color: #2A6A2A; }
+    .search-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .search-row input {
+      flex: 1; font-size: 13px; padding: 7px 12px; border: 0.5px solid #ddd;
+      border-radius: 6px; background: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      outline: none;
+    }
+    body.dark .search-row input { background: #111; border-color: #2A2A2A; color: #4ADB4A; }
+    .search-row button {
+      font-size: 13px; padding: 7px 14px; border: 0.5px solid #ddd; border-radius: 6px;
+      background: #fff; cursor: pointer; display: flex; align-items: center; gap: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body.dark .search-row button { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
     .section-label { font-size: 11px; color: #aaa; margin: 0 0 10px; letter-spacing: 0.08em; }
     body.dark .section-label { color: #2A4A2A; }
     .doc-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
     .doc-card {
-      background: #fff;
-      border-radius: 6px;
-      border: 0.5px solid #ddd;
-      border-left: 2px solid #888;
-      padding: 0.875rem 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+      background: #fff; border-radius: 6px; border: 0.5px solid #ddd;
+      border-left: 2px solid #888; padding: 0.875rem 1rem;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
     }
     body.dark .doc-card { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; }
     .doc-card .info { min-width: 0; }
     .doc-card .title {
-      font-size: 14px;
-      font-weight: 500;
-      margin: 0 0 3px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      font-size: 14px; font-weight: 500; margin: 0 0 3px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
     body.dark .doc-card .title { color: #4ADB4A; }
     .doc-card .meta { font-size: 11px; color: #aaa; margin: 0; letter-spacing: 0.04em; }
     body.dark .doc-card .meta { color: #2A5A2A; }
     .doc-card .actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
-    .doc-card .actions a, .doc-card .actions button {
-      font-size: 11px;
-      padding: 4px 10px;
-      border: 0.5px solid #ddd;
-      border-radius: 4px;
-      background: #fff;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      text-decoration: none;
-      color: inherit;
-      font-family: 'SF Mono', 'Fira Mono', monospace;
+    .doc-card .actions a {
+      font-size: 11px; padding: 4px 10px; border: 0.5px solid #ddd; border-radius: 4px;
+      background: #fff; cursor: pointer; letter-spacing: 0.04em; text-decoration: none;
+      color: inherit; font-family: 'SF Mono', 'Fira Mono', monospace;
     }
-    body.dark .doc-card .actions a,
-    body.dark .doc-card .actions button { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
-    .doc-card .actions a:hover, .doc-card .actions button:hover { background: #f5f5f5; }
-    body.dark .doc-card .actions a:hover,
-    body.dark .doc-card .actions button:hover { background: #161616; }
+    body.dark .doc-card .actions a { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
+    .doc-card .actions a:hover { background: #f5f5f5; }
+    body.dark .doc-card .actions a:hover { background: #161616; }
+    .search-result {
+      background: #fff; border-radius: 6px; border: 0.5px solid #ddd;
+      border-left: 2px solid #888; padding: 0.875rem 1rem; margin-bottom: 8px;
+    }
+    body.dark .search-result { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; }
+    .search-result .result-meta { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    body.dark .search-result .result-meta { color: #4ADB4A; }
+    .search-result .result-snippet {
+      font-size: 12px; color: #666; line-height: 1.5;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    body.dark .search-result .result-snippet { color: #3A7A3A; }
+    .search-result .result-snippet mark { background: #fff3b0; color: #1a1a1a; border-radius: 2px; padding: 0 2px; }
+    body.dark .search-result .result-snippet mark { background: #2A4A1A; color: #4ADB4A; }
+    .result-link { font-size: 11px; color: #aaa; text-decoration: none; margin-top: 6px; display: inline-block; }
+    body.dark .result-link { color: #2A5A2A; }
     .footer {
-      padding-top: 1rem;
-      border-top: 0.5px solid #ddd;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding-top: 1rem; border-top: 0.5px solid #ddd;
+      display: flex; justify-content: space-between; align-items: center;
     }
     body.dark .footer { border-color: #1A1A1A; }
     .footer a { font-size: 11px; color: #aaa; text-decoration: none; letter-spacing: 0.06em; }
@@ -128,23 +125,40 @@
   <div class="container">
     <div class="header-row">
       <div>
-        <p class="version">PROJECT ERIS v0.1.0 — LOCAL BUILD</p>
+        <p class="version">PROJECT ERIS v0.2.0 — LOCAL BUILD</p>
         <p class="wordmark">A.R.C.H.I.V.E.</p>
-        <p class="subtitle">Aggregated Reference Collection: Housed in an Indexed Vault for Evidence</p>
+        <p class="subtitle" style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;">Aggregated Reference Collection: Housed in an Indexed Vault for Evidence</p>
       </div>
       <button class="mode-toggle" id="mode-toggle" onclick="toggleMode()">DARK</button>
     </div>
 
-    <div class="filter-row">
-      <input type="text" id="search-input" placeholder="Search by author, title, filename..." oninput="filterDocs()" />
-      <button class="type-btn active" onclick="setType('ALL', this)">ALL</button>
-      <button class="type-btn" onclick="setType('BOOK', this)">BOOK</button>
-      <button class="type-btn" onclick="setType('ARTICLE', this)">ARTICLE</button>
-      <button class="type-btn" onclick="setType('DOCUMENT', this)">DOC</button>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('browse', this)">BROWSE</button>
+      <button class="tab" onclick="showTab('search', this)">SEARCH</button>
     </div>
 
-    <p class="section-label" id="section-label">── LOADING ──────────────────────────────────</p>
-    <div class="doc-list" id="doc-list"></div>
+    <!-- Browse Tab -->
+    <div class="tab-panel active" id="tab-browse">
+      <div class="filter-row">
+        <input type="text" id="browse-input" placeholder="Filter by author, title, filename..." oninput="filterDocs()" />
+        <button class="active" id="btn-all" onclick="setType('ALL', this)">ALL</button>
+        <button id="btn-book" onclick="setType('BOOK', this)">BOOK</button>
+        <button id="btn-article" onclick="setType('ARTICLE', this)">ARTICLE</button>
+        <button id="btn-doc" onclick="setType('DOCUMENT', this)">DOC</button>
+      </div>
+      <p class="section-label" id="browse-label">── LOADING ──────────────────────────────────</p>
+      <div class="doc-list" id="doc-list"></div>
+    </div>
+
+    <!-- Search Tab -->
+    <div class="tab-panel" id="tab-search">
+      <div class="search-row">
+        <input type="text" id="keyword-input" placeholder="Search inside all documents..." />
+        <button onclick="runKeywordSearch()">Search</button>
+      </div>
+      <p class="section-label" id="search-label">── ENTER A KEYWORD OR PHRASE ────────────────</p>
+      <div id="search-results"></div>
+    </div>
 
     <div class="footer">
       <a href="/">← ERIS</a>
@@ -163,34 +177,37 @@
       localStorage.setItem("eris-dark", dark);
       if (dark) applyDark(); else applyLight();
     }
-
     function applyDark() {
       document.body.classList.add("dark");
       document.getElementById("mode-toggle").textContent = "LIGHT";
     }
-
     function applyLight() {
       document.body.classList.remove("dark");
       document.getElementById("mode-toggle").textContent = "DARK";
     }
 
+    function showTab(name, btn) {
+      document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+      document.querySelectorAll(".tab").forEach(function(b) { b.classList.remove("active"); });
+      document.getElementById("tab-" + name).classList.add("active");
+      btn.classList.add("active");
+    }
+
     function setType(type, btn) {
       currentType = type;
-      document.querySelectorAll(".type-btn").forEach(function(b) {
-        b.classList.remove("active");
-      });
+      document.querySelectorAll(".filter-row button").forEach(function(b) { b.classList.remove("active"); });
       btn.classList.add("active");
       filterDocs();
     }
 
     function filterDocs() {
-      var query = document.getElementById("search-input").value.toLowerCase();
+      var query = document.getElementById("browse-input").value.toLowerCase();
       var filtered = allDocs.filter(function(doc) {
         var matchType = currentType === "ALL" || doc.doc_type === currentType;
         var matchQuery = !query ||
-          doc.title.toLowerCase().includes(query) ||
-          doc.author.toLowerCase().includes(query) ||
-          doc.filename.toLowerCase().includes(query);
+          (doc.title && doc.title.toLowerCase().includes(query)) ||
+          (doc.author && doc.author.toLowerCase().includes(query)) ||
+          (doc.filename && doc.filename.toLowerCase().includes(query));
         return matchType && matchQuery;
       });
       renderDocs(filtered);
@@ -198,14 +215,12 @@
 
     function renderDocs(docs) {
       var list = document.getElementById("doc-list");
-      var label = document.getElementById("section-label");
+      var label = document.getElementById("browse-label");
       list.innerHTML = "";
-
-      var dashes = "────────────────────────────────────────────";
-      label.textContent = "── " + docs.length + " DOCUMENT" + (docs.length !== 1 ? "S" : "") + " " + dashes.slice(0, 44 - docs.length.toString().length - 11);
+      label.textContent = "── " + docs.length + " DOCUMENT" + (docs.length !== 1 ? "S" : "") + " ──────────────────────────────────────";
 
       if (docs.length === 0) {
-        list.innerHTML = "<p class='empty'>No documents match your search.</p>";
+        list.innerHTML = "<p class='empty'>No documents match your filter.</p>";
         return;
       }
 
@@ -213,30 +228,72 @@
         var card = document.createElement("div");
         card.className = "doc-card";
         var author = doc.author || "unknown";
-        var pages = doc.pages ? " · " + doc.pages + " pp" : "";
+        var title = doc.title || doc.filename;
+        var docUrl = "/archive/doc/" + encodeURIComponent(doc.filename);
         card.innerHTML =
           "<div class='info'>" +
-          "<p class='title'>" + (doc.title || doc.filename) + "</p>" +
-          "<p class='meta'>" + doc.doc_type + " · " + author + pages + "</p>" +
+          "<p class='title'>" + title + "</p>" +
+          "<p class='meta'>" + doc.doc_type + " · " + author + "</p>" +
           "</div>" +
           "<div class='actions'>" +
-          "<a href='/archive/view/" + encodeURIComponent(doc.filename) + "' target='_blank'>VIEW</a>" +
+          "<a href='" + docUrl + "'>VIEW</a>" +
           "<a href='/archive/download/" + encodeURIComponent(doc.filename) + "'>↓</a>" +
           "</div>";
         list.appendChild(card);
       });
     }
 
+    function runKeywordSearch() {
+      var query = document.getElementById("keyword-input").value.trim();
+      if (!query) return;
+
+      var label = document.getElementById("search-label");
+      var resultsEl = document.getElementById("search-results");
+      label.textContent = "── SEARCHING ────────────────────────────────";
+      resultsEl.innerHTML = "";
+
+      fetch("/archive/search?q=" + encodeURIComponent(query))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          label.textContent = "── " + data.total + " RESULT" + (data.total !== 1 ? "S" : "") + " FOR \"" + query + "\" ────────────────";
+
+          if (data.total === 0) {
+            resultsEl.innerHTML = "<p class='empty'>No matches found.</p>";
+            return;
+          }
+
+          data.results.forEach(function(result) {
+            var author = result.author ? ", " + result.author : "";
+            var docUrl = "/archive/doc/" + encodeURIComponent(result.source_file) + "#page=" + result.page_number;
+            var div = document.createElement("div");
+            div.className = "search-result";
+            div.innerHTML =
+              "<p class='result-meta'>" + (result.title || result.source_file) + author + "</p>" +
+              "<p class='result-snippet'>" + result.snippet + "</p>" +
+              "<a class='result-link' href='" + docUrl + "'>→ " + result.doc_type + " · p. " + result.page_number + "</a>";
+            resultsEl.appendChild(div);
+          });
+        })
+        .catch(function() {
+          label.textContent = "── SEARCH ERROR ─────────────────────────────";
+        });
+    }
+
+    // Allow Enter key in keyword search
+    document.getElementById("keyword-input").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") runKeywordSearch();
+    });
+
+    // Load documents for browse tab
     fetch("/archive/documents")
-      .then(function(res) { return res.json(); })
+      .then(function(r) { return r.json(); })
       .then(function(data) {
         allDocs = data.documents;
-        document.getElementById("stats").textContent =
-          data.total + " DOCUMENTS · " + data.chunks + " CHUNKS";
+        document.getElementById("stats").textContent = data.total + " DOCUMENTS · " + data.chunks + " CHUNKS";
         filterDocs();
       })
       .catch(function() {
-        document.getElementById("section-label").textContent = "── ERROR LOADING DOCUMENTS ──────────────────";
+        document.getElementById("browse-label").textContent = "── ERROR LOADING DOCUMENTS ──────────────────";
       });
   </script>
 </body>

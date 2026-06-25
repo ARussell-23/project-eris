@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document — Project ERIS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #EFEFEF;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    body.dark { background: #0D0D0D; color: #4ADB4A; }
+    .container { max-width: 860px; margin: 0 auto; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .header .label {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 11px; color: #888; letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    body.dark .header .label { color: #2A4A2A; }
+    .header .wordmark {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 24px; font-weight: 500; letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    body.dark .header .wordmark { color: #4ADB4A; }
+    .header .subtitle { font-size: 12px; color: #666; letter-spacing: 0.02em; }
+    body.dark .header .subtitle { color: #3A7A3A; }
+    .mode-toggle {
+      font-size: 11px; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 4px;
+      cursor: pointer; background: transparent; border: 0.5px solid #ccc; color: #888;
+      font-family: "SF Mono", "Fira Mono", monospace; margin-top: 4px; flex-shrink: 0;
+    }
+    body.dark .mode-toggle { border-color: #2A2A2A; color: #3A7A3A; }
+    .meta-card {
+      background: #fff; border-radius: 6px; border: 0.5px solid #ddd;
+      border-left: 2px solid #888; padding: 1.25rem 1rem; margin-bottom: 1rem;
+    }
+    body.dark .meta-card { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; }
+    .meta-card .doc-type {
+      font-family: "SF Mono", "Fira Mono", monospace;
+      font-size: 11px; color: #888; letter-spacing: 0.08em; margin-bottom: 8px;
+    }
+    body.dark .meta-card .doc-type { color: #2A5A2A; }
+    .field-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .field { flex: 1; }
+    .field label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+    body.dark .field label { color: #3A7A3A; }
+    .field input {
+      width: 100%; font-size: 14px; padding: 6px 8px;
+      border: 0.5px solid #ccc; border-radius: 4px; background: #fff; color: #1a1a1a;
+    }
+    body.dark .field input { background: #0D0D0D; border-color: #2A2A2A; color: #4ADB4A; }
+    .actions-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+    .btn {
+      font-size: 13px; padding: 6px 14px; border: 0.5px solid #ccc;
+      border-radius: 6px; background: #fff; cursor: pointer; text-decoration: none;
+      color: inherit; display: inline-flex; align-items: center; gap: 6px;
+    }
+    body.dark .btn { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
+    .btn:hover { background: #f5f5f5; }
+    body.dark .btn:hover { background: #161616; }
+    .btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+    body.dark .btn.primary { background: #1A3A1A; color: #4ADB4A; border-color: #2A6A2A; }
+    .save-status { font-size: 12px; color: #888; }
+    body.dark .save-status { color: #3A7A3A; }
+    .pdf-viewer {
+      width: 100%; height: 75vh; border: 0.5px solid #ddd;
+      border-radius: 6px; margin-bottom: 1rem; background: #fff;
+    }
+    body.dark .pdf-viewer { border-color: #2A2A2A; }
+    .footer {
+      padding-top: 1rem; border-top: 0.5px solid #ddd;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    body.dark .footer { border-color: #1A1A1A; }
+    .footer a { font-size: 11px; color: #aaa; text-decoration: none; letter-spacing: 0.06em; font-family: "SF Mono", "Fira Mono", monospace; }
+    body.dark .footer a { color: #2A5A2A; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <div class="header">
+        <p class="label">project eris · a.r.c.h.i.v.e.</p>
+        <p class="wordmark" id="doc-title">Loading...</p>
+        <p class="subtitle" id="doc-author"></p>
+      </div>
+      <button class="mode-toggle" id="mode-toggle" onclick="toggleMode()">DARK</button>
+    </div>
+
+    <div class="meta-card">
+      <p class="doc-type" id="doc-type"></p>
+      <div class="field-row">
+        <div class="field">
+          <label>Title</label>
+          <input type="text" id="edit-title" />
+        </div>
+        <div class="field">
+          <label>Author</label>
+          <input type="text" id="edit-author" />
+        </div>
+      </div>
+      <div class="actions-row">
+        <button class="btn primary" onclick="saveMetadata()">Save changes</button>
+        <a class="btn" id="download-btn" href="#" download>Download</a>
+        <span class="save-status" id="save-status"></span>
+      </div>
+    </div>
+
+    <iframe class="pdf-viewer" id="pdf-viewer" src=""></iframe>
+
+    <div class="footer">
+      <a href="/archive">← Archive</a>
+      <a href="/">← ERIS</a>
+    </div>
+  </div>
+
+  <script>
+    var dark = localStorage.getItem("eris-dark") === "true";
+    if (dark) applyDark();
+
+    function toggleMode() {
+      dark = !dark;
+      localStorage.setItem("eris-dark", dark);
+      if (dark) applyDark(); else applyLight();
+    }
+    function applyDark() {
+      document.body.classList.add("dark");
+      document.getElementById("mode-toggle").textContent = "LIGHT";
+    }
+    function applyLight() {
+      document.body.classList.remove("dark");
+      document.getElementById("mode-toggle").textContent = "DARK";
+    }
+
+    // Get filename from URL path /archive/doc/filename.pdf
+    var filename = decodeURIComponent(window.location.pathname.split("/archive/doc/")[1] || "");
+    // Get page from hash e.g. #page=14
+    var page = window.location.hash.replace("#page=", "") || "1";
+
+    if (filename) {
+      // Load document metadata from dedicated endpoint
+      fetch("/archive/doc-metadata/" + encodeURIComponent(filename))
+        .then(function(r) { return r.json(); })
+        .then(function(doc) {
+          if (doc.found) {
+            document.title = (doc.title || filename) + " — Project ERIS";
+            document.getElementById("doc-title").textContent = doc.title || filename;
+            document.getElementById("doc-author").textContent = doc.author || "unknown author";
+            document.getElementById("doc-type").textContent = doc.doc_type + " · " + filename;
+            document.getElementById("edit-title").value = doc.title || "";
+            document.getElementById("edit-author").value = doc.author || "";
+          }
+        });
+
+      // Set PDF viewer src with page
+      var viewUrl = "/archive/view/" + encodeURIComponent(filename) + "#page=" + page;
+      document.getElementById("pdf-viewer").src = viewUrl;
+
+      // Set download link
+      document.getElementById("download-btn").href = "/archive/download/" + encodeURIComponent(filename);
+    }
+
+    function saveMetadata() {
+      var status = document.getElementById("save-status");
+      status.textContent = "Saving...";
+
+      var title = document.getElementById("edit-title").value.trim();
+      var author = document.getElementById("edit-author").value.trim();
+
+      fetch("/archive/update-metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: filename, title: title, author: author })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          document.getElementById("doc-title").textContent = title || filename;
+          document.getElementById("doc-author").textContent = author || "unknown author";
+          status.textContent = "Saved — " + data.chunks_updated + " chunks updated";
+          setTimeout(function() { status.textContent = ""; }, 3000);
+        } else {
+          status.textContent = "Error: " + (data.error || "unknown error");
+        }
+      })
+      .catch(function() {
+        status.textContent = "Save failed — is the server running?";
+      });
+    }
+  </script>
+</body>
+</html>

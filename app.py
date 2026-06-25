@@ -1,5 +1,5 @@
 import os
-import fitz
+import sqlite3
 from flask import Flask, render_template, request, jsonify, session, send_file, abort
 from guide.response import ask_guide
 from ingest.convert import prepare_file
@@ -20,18 +20,43 @@ FOLDER_TYPE_MAP = {
     DOCS_DIR: "DOCUMENT"
 }
 
+SQLITE_PATH = "data/search_index.db"
+
+# Cache for document list
+_doc_cache = None
+_chunk_count_cache = None
+
 def get_all_documents():
     """
-    Walks the document folders and returns metadata for every PDF found.
-    Pulls title/author from embedded PDF metadata with filename fallback.
+    Builds document list from filesystem using SQLite for metadata.
+    Fast — one query per folder, not per file.
+    Results are cached after first call.
     """
-    import chromadb
-    client = chromadb.PersistentClient(path=CHROMA_DIR)
+    global _doc_cache, _chunk_count_cache
+
+    if _doc_cache is not None:
+        return _doc_cache, _chunk_count_cache
+
+    # Get chunk count from SQLite
     try:
-        collection = client.get_collection(COLLECTION_NAME)
-        chunk_count = collection.count()
-    except Exception:
+        conn = sqlite3.connect(SQLITE_PATH)
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM chunks")
+        chunk_count = c.fetchone()[0]
+
+        # Get one metadata row per source file
+        c.execute("""
+            SELECT source_file, title, author, doc_type
+            FROM chunks
+            GROUP BY source_file
+        """)
+        meta_lookup = {row[0]: {"title": row[1], "author": row[2], "doc_type": row[3]}
+                      for row in c.fetchall()}
+        conn.close()
+    except Exception as e:
+        print(f"Warning: SQLite lookup failed: {e}")
         chunk_count = 0
+        meta_lookup = {}
 
     docs = []
     for folder, doc_type in FOLDER_TYPE_MAP.items():
@@ -41,28 +66,42 @@ def get_all_documents():
             if not filename.endswith(".pdf"):
                 continue
             pdf_path = os.path.join(folder, filename)
-            try:
-                pdf = fitz.open(pdf_path)
-                meta = pdf.metadata
-                page_count = len(pdf)
-                pdf.close()
-                title = (meta.get("title") or "").strip() or os.path.splitext(filename)[0].replace("_", " ").replace("-", " ").title()
-                author = (meta.get("author") or "").strip()
-            except Exception:
-                title = filename
-                author = ""
-                page_count = 0
-
+            meta = meta_lookup.get(filename, {})
+            # Fall back to filename parsing if not in SQLite
+            if not meta.get("title"):
+                name = os.path.splitext(filename)[0]
+                title = name.replace("_", " ").replace("-", " ").title()
+            else:
+                title = meta["title"]
             docs.append({
                 "filename": filename,
                 "filepath": pdf_path,
-                "doc_type": doc_type,
+                "doc_type": meta.get("doc_type", doc_type),
                 "title": title,
-                "author": author,
-                "pages": page_count
+                "author": meta.get("author", ""),
+                "pages": None
             })
 
+    _doc_cache = docs
+    _chunk_count_cache = chunk_count
     return docs, chunk_count
+
+def get_doc_metadata(filename):
+    """Gets metadata for a single document from SQLite."""
+    try:
+        conn = sqlite3.connect(SQLITE_PATH)
+        c = conn.cursor()
+        c.execute("""
+            SELECT title, author, doc_type FROM chunks
+            WHERE source_file = ? LIMIT 1
+        """, (filename,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return {"title": row[0], "author": row[1], "doc_type": row[2]}
+    except Exception:
+        pass
+    return {}
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 
@@ -111,6 +150,23 @@ def archive_documents():
         "chunks": chunk_count
     })
 
+@app.route("/archive/doc/<path:filename>")
+def archive_doc(filename):
+    return render_template("doc.html")
+
+@app.route("/archive/doc-metadata/<path:filename>")
+def archive_doc_metadata(filename):
+    """Returns metadata for a single document."""
+    docs, _ = get_all_documents()
+    match = next((d for d in docs if d["filename"] == filename), None)
+    if not match:
+        # Try SQLite directly
+        meta = get_doc_metadata(filename)
+        if meta:
+            return jsonify({"found": True, "filename": filename, **meta})
+        abort(404)
+    return jsonify({"found": True, **match})
+
 @app.route("/archive/view/<path:filename>")
 def archive_view(filename):
     docs, _ = get_all_documents()
@@ -126,6 +182,102 @@ def archive_download(filename):
     if not match:
         abort(404)
     return send_file(match["filepath"], mimetype="application/pdf", as_attachment=True, download_name=filename)
+
+@app.route("/archive/search", methods=["GET"])
+def archive_search():
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"results": [], "total": 0})
+
+    try:
+        conn = sqlite3.connect(SQLITE_PATH)
+        c = conn.cursor()
+        c.execute("""
+            SELECT
+                chunks.source_file,
+                chunks.title,
+                chunks.author,
+                chunks.doc_type,
+                chunks.page_number,
+                snippet(chunks_fts, 0, '<mark>', '</mark>', '...', 20) as snippet
+            FROM chunks_fts
+            JOIN chunks ON chunks.rowid = chunks_fts.rowid
+            WHERE chunks_fts MATCH ?
+            ORDER BY rank
+            LIMIT 50
+        """, (query,))
+        rows = c.fetchall()
+        conn.close()
+
+        results = [
+            {
+                "source_file": r[0],
+                "title": r[1],
+                "author": r[2],
+                "doc_type": r[3],
+                "page_number": r[4],
+                "snippet": r[5]
+            }
+            for r in rows
+        ]
+        return jsonify({"results": results, "total": len(results)})
+
+    except Exception as e:
+        return jsonify({"results": [], "total": 0, "error": str(e)})
+
+@app.route("/archive/update-metadata", methods=["POST"])
+def archive_update_metadata():
+    global _doc_cache
+    data = request.get_json()
+    filename = data.get("filename", "").strip()
+    title = data.get("title", "").strip()
+    author = data.get("author", "").strip()
+
+    if not filename:
+        return jsonify({"success": False, "error": "No filename provided"})
+
+    try:
+        import chromadb
+        client = chromadb.PersistentClient(path=CHROMA_DIR)
+        collection = client.get_collection(COLLECTION_NAME)
+
+        results = collection.get(
+            where={"source_file": filename},
+            include=["metadatas"]
+        )
+
+        if not results["ids"]:
+            return jsonify({"success": False, "error": "No chunks found for this file"})
+
+        updated_metadatas = []
+        for meta in results["metadatas"]:
+            updated = dict(meta)
+            updated["title"] = title
+            updated["author"] = author
+            updated_metadatas.append(updated)
+
+        batch_size = 5000
+        ids = results["ids"]
+        for i in range(0, len(ids), batch_size):
+            collection.update(
+                ids=ids[i:i+batch_size],
+                metadatas=updated_metadatas[i:i+batch_size]
+            )
+
+        # Update SQLite
+        conn = sqlite3.connect(SQLITE_PATH)
+        c = conn.cursor()
+        c.execute("UPDATE chunks SET title = ?, author = ? WHERE source_file = ?",
+                  (title, author, filename))
+        c.execute("INSERT INTO chunks_fts(chunks_fts) VALUES('rebuild')")
+        conn.commit()
+        conn.close()
+
+        _doc_cache = None
+        return jsonify({"success": True, "chunks_updated": len(ids)})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 @app.route("/ingest")
 def ingest():
@@ -169,6 +321,7 @@ def ingest_upload():
 
 @app.route("/ingest/confirm", methods=["POST"])
 def ingest_confirm():
+    global _doc_cache
     confirmed = request.get_json()
     results = []
 
@@ -198,6 +351,7 @@ def ingest_confirm():
                 "error": str(e)
             })
 
+    _doc_cache = None
     return jsonify({"results": results})
 
 if __name__ == "__main__":
