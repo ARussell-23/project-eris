@@ -9,11 +9,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #EFEFEF;
-      color: #1a1a1a;
-      min-height: 100vh;
-      padding: 2rem;
-      transition: background 0.2s, color 0.2s;
+      background: #EFEFEF; color: #1a1a1a; min-height: 100vh;
+      padding: 2rem; transition: background 0.2s, color 0.2s;
     }
     body.dark { background: #0D0D0D; color: #4ADB4A; }
     .container { max-width: 680px; margin: 0 auto; }
@@ -59,9 +56,16 @@
     body.dark .status { color: #3A7A3A; }
     .guide-response {
       font-size: 13px; color: #444; margin-bottom: 1.25rem;
-      line-height: 1.6; white-space: pre-wrap;
+      line-height: 1.6; white-space: pre-wrap; min-height: 0;
     }
     body.dark .guide-response { color: #3A7A3A; }
+    .cursor {
+      display: inline-block; width: 8px; height: 14px;
+      background: #888; vertical-align: -2px;
+      animation: blink 1s step-start infinite;
+    }
+    body.dark .cursor { background: #3A7A3A; }
+    @keyframes blink { 50% { opacity: 0; } }
     .results { display: flex; flex-direction: column; gap: 8px; }
     .result-card {
       background: #fff; border-radius: 6px; border: 0.5px solid #ddd;
@@ -80,15 +84,13 @@
     .result-card .page-btn {
       font-size: 13px; padding: 4px 10px; border: 0.5px solid #ddd;
       border-radius: 4px; background: #fff; cursor: pointer;
-      flex-shrink: 0; color: #444; text-decoration: none;
-      display: inline-block;
+      flex-shrink: 0; color: #444; text-decoration: none; display: inline-block;
     }
     body.dark .result-card .page-btn { background: #111; border-color: #2A2A2A; color: #3A7A3A; }
     .result-card .page-btn:hover { background: #f5f5f5; }
     body.dark .result-card .page-btn:hover { background: #161616; }
     .footer {
-      margin-top: 1.5rem; padding-top: 1rem;
-      border-top: 0.5px solid #ddd;
+      margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid #ddd;
       display: flex; justify-content: space-between; align-items: center;
     }
     body.dark .footer { border-color: #1A1A1A; }
@@ -148,62 +150,103 @@
     var responseEl = document.getElementById("guide-response");
     var resultsEl = document.getElementById("results");
     var spinner = document.getElementById("spinner");
+    var currentSource = null;
 
     queryInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") runSearch();
     });
 
-    async function runSearch() {
+    function runSearch() {
       var query = queryInput.value.trim();
       if (!query) return;
 
+      // Cancel any existing stream
+      if (currentSource) {
+        currentSource.close();
+        currentSource = null;
+      }
+
+      // Clear previous results
       statusEl.textContent = "";
       responseEl.textContent = "";
       resultsEl.innerHTML = "";
       spinner.style.display = "block";
 
-      try {
-        var controller = new AbortController();
-        var timeout = setTimeout(function() { controller.abort(); }, 300000);
+      // Add blinking cursor to response area
+      var cursor = document.createElement("span");
+      cursor.className = "cursor";
+      responseEl.appendChild(cursor);
 
-        var res = await fetch("/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: query }),
-          signal: controller.signal
-        });
+      // Open SSE stream
+      currentSource = new EventSource("/search?q=" + encodeURIComponent(query));
 
-        clearTimeout(timeout);
-        var data = await res.json();
-        spinner.style.display = "none";
-        responseEl.textContent = data.response;
+      currentSource.onmessage = function(e) {
+        var data = JSON.parse(e.data);
 
-        if (data.results && data.results.length > 0) {
-          statusEl.textContent = data.results.length + " source" + (data.results.length > 1 ? "s" : "") + " found";
-          data.results.forEach(function(result) {
-            var author = result.author ? ", " + result.author : "";
-            var card = document.createElement("div");
-            card.className = "result-card";
-            var pdfUrl = "/archive/doc/" + encodeURIComponent(result.source_file) + "#page=" + result.page_number;
-            card.innerHTML =
-              "<div style='min-width:0'>" +
-              "<p class='meta'>" + result.title + author + "</p>" +
-              "<p class='snippet'>" + result.text + "</p>" +
-              "</div>" +
-              "<a class='page-btn' href='" + pdfUrl + "' target='_blank'>p. " + result.page_number + "</a>";
-            resultsEl.appendChild(card);
-          });
-        } else {
-          statusEl.textContent = "0 sources found";
+        if (data.type === "results") {
+          // Show result cards immediately
+          var results = data.results;
+          if (results && results.length > 0) {
+            statusEl.textContent = results.length + " source" + (results.length > 1 ? "s" : "") + " found";
+            results.forEach(function(result) {
+              var author = result.author ? ", " + result.author : "";
+              var card = document.createElement("div");
+              card.className = "result-card";
+              var docUrl = "/archive/doc/" + encodeURIComponent(result.source_file) + "#page=" + result.page_number;
+              card.innerHTML =
+                "<div style='min-width:0'>" +
+                "<p class='meta'>" + (result.title || result.source_file) + author + "</p>" +
+                "<p class='snippet'>" + result.text + "</p>" +
+                "</div>" +
+                "<a class='page-btn' href='" + docUrl + "' target='_blank'>p. " + result.page_number + "</a>";
+              resultsEl.appendChild(card);
+            });
+          } else {
+            statusEl.textContent = "0 sources found";
+          }
+          spinner.style.display = "none";
         }
-      } catch(err) {
+
+        else if (data.type === "token") {
+          // Remove cursor, append token, re-add cursor
+          var existingCursor = responseEl.querySelector(".cursor");
+          if (existingCursor) existingCursor.remove();
+          responseEl.appendChild(document.createTextNode(data.token));
+          var newCursor = document.createElement("span");
+          newCursor.className = "cursor";
+          responseEl.appendChild(newCursor);
+        }
+
+        else if (data.type === "done") {
+          // Remove cursor when done
+          var finalCursor = responseEl.querySelector(".cursor");
+          if (finalCursor) finalCursor.remove();
+          currentSource.close();
+          currentSource = null;
+        }
+
+        else if (data.type === "error") {
+          var errCursor = responseEl.querySelector(".cursor");
+          if (errCursor) errCursor.remove();
+          statusEl.textContent = "Something went wrong — is Ollama running?";
+          spinner.style.display = "none";
+          currentSource.close();
+          currentSource = null;
+        }
+      };
+
+      currentSource.onerror = function() {
+        var errCursor = responseEl.querySelector(".cursor");
+        if (errCursor) errCursor.remove();
         spinner.style.display = "none";
-        if (err.name === "AbortError") {
-          statusEl.textContent = "Search timed out — Ollama is still generating. Try a more specific query.";
-        } else {
+        if (responseEl.textContent.trim() === "") {
           statusEl.textContent = "Something went wrong — is Ollama running?";
         }
-      }
+        if (currentSource) {
+          currentSource.close();
+          currentSource = null;
+        }
+      };
     }
   </script>
 </body>

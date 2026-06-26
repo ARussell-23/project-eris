@@ -9,11 +9,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #EFEFEF;
-      color: #1a1a1a;
-      min-height: 100vh;
-      padding: 2rem;
-      transition: background 0.2s, color 0.2s;
+      background: #EFEFEF; color: #1a1a1a; min-height: 100vh;
+      padding: 2rem; transition: background 0.2s, color 0.2s;
     }
     body.dark { background: #0D0D0D; color: #4ADB4A; }
     .container { max-width: 860px; margin: 0 auto; }
@@ -42,20 +39,22 @@
       border-left: 2px solid #888; padding: 1.25rem 1rem; margin-bottom: 1rem;
     }
     body.dark .meta-card { background: #111; border-color: #1A1A1A; border-left-color: #2A6A2A; }
-    .meta-card .doc-type {
+    .meta-card .doc-type-label {
       font-family: "SF Mono", "Fira Mono", monospace;
       font-size: 11px; color: #888; letter-spacing: 0.08em; margin-bottom: 8px;
     }
-    body.dark .meta-card .doc-type { color: #2A5A2A; }
+    body.dark .meta-card .doc-type-label { color: #2A5A2A; }
     .field-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .field { flex: 1; }
     .field label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
     body.dark .field label { color: #3A7A3A; }
-    .field input {
+    .field input, .field select {
       width: 100%; font-size: 14px; padding: 6px 8px;
       border: 0.5px solid #ccc; border-radius: 4px; background: #fff; color: #1a1a1a;
     }
-    body.dark .field input { background: #0D0D0D; border-color: #2A2A2A; color: #4ADB4A; }
+    body.dark .field input, body.dark .field select {
+      background: #0D0D0D; border-color: #2A2A2A; color: #4ADB4A;
+    }
     .actions-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
     .btn {
       font-size: 13px; padding: 6px 14px; border: 0.5px solid #ccc;
@@ -69,6 +68,11 @@
     body.dark .btn.primary { background: #1A3A1A; color: #4ADB4A; border-color: #2A6A2A; }
     .save-status { font-size: 12px; color: #888; }
     body.dark .save-status { color: #3A7A3A; }
+    .type-warning {
+      font-size: 12px; color: #888; margin-top: 6px; display: none;
+      font-style: italic;
+    }
+    body.dark .type-warning { color: #3A7A3A; }
     .pdf-viewer {
       width: 100%; height: 75vh; border: 0.5px solid #ddd;
       border-radius: 6px; margin-bottom: 1rem; background: #fff;
@@ -95,7 +99,7 @@
     </div>
 
     <div class="meta-card">
-      <p class="doc-type" id="doc-type"></p>
+      <p class="doc-type-label" id="doc-type-label"></p>
       <div class="field-row">
         <div class="field">
           <label>Title</label>
@@ -105,7 +109,18 @@
           <label>Author</label>
           <input type="text" id="edit-author" />
         </div>
+        <div class="field" style="flex: 0.5;">
+          <label>Type</label>
+          <select id="edit-type" onchange="checkTypeChange()">
+            <option value="BOOK">BOOK</option>
+            <option value="ARTICLE">ARTICLE</option>
+            <option value="DOCUMENT">DOCUMENT</option>
+          </select>
+        </div>
       </div>
+      <p class="type-warning" id="type-warning">
+        Changing type will move this file to a different folder. This cannot be undone easily.
+      </p>
       <div class="actions-row">
         <button class="btn primary" onclick="saveMetadata()">Save changes</button>
         <a class="btn" id="download-btn" href="#" download>Download</a>
@@ -139,13 +154,21 @@
       document.getElementById("mode-toggle").textContent = "DARK";
     }
 
-    // Get filename from URL path /archive/doc/filename.pdf
     var filename = decodeURIComponent(window.location.pathname.split("/archive/doc/")[1] || "");
-    // Get page from hash e.g. #page=14
     var page = window.location.hash.replace("#page=", "") || "1";
+    var originalType = "";
+
+    function checkTypeChange() {
+      var warning = document.getElementById("type-warning");
+      var newType = document.getElementById("edit-type").value;
+      if (newType !== originalType) {
+        warning.style.display = "block";
+      } else {
+        warning.style.display = "none";
+      }
+    }
 
     if (filename) {
-      // Load document metadata from dedicated endpoint
       fetch("/archive/doc-metadata/" + encodeURIComponent(filename))
         .then(function(r) { return r.json(); })
         .then(function(doc) {
@@ -153,17 +176,16 @@
             document.title = (doc.title || filename) + " — Project ERIS";
             document.getElementById("doc-title").textContent = doc.title || filename;
             document.getElementById("doc-author").textContent = doc.author || "unknown author";
-            document.getElementById("doc-type").textContent = doc.doc_type + " · " + filename;
+            document.getElementById("doc-type-label").textContent = doc.doc_type + " · " + filename;
             document.getElementById("edit-title").value = doc.title || "";
             document.getElementById("edit-author").value = doc.author || "";
+            document.getElementById("edit-type").value = doc.doc_type || "BOOK";
+            originalType = doc.doc_type || "BOOK";
           }
         });
 
-      // Set PDF viewer src with page
       var viewUrl = "/archive/view/" + encodeURIComponent(filename) + "#page=" + page;
       document.getElementById("pdf-viewer").src = viewUrl;
-
-      // Set download link
       document.getElementById("download-btn").href = "/archive/download/" + encodeURIComponent(filename);
     }
 
@@ -173,18 +195,26 @@
 
       var title = document.getElementById("edit-title").value.trim();
       var author = document.getElementById("edit-author").value.trim();
+      var docType = document.getElementById("edit-type").value;
 
       fetch("/archive/update-metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filename: filename, title: title, author: author })
+        body: JSON.stringify({ filename: filename, title: title, author: author, doc_type: docType })
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.success) {
           document.getElementById("doc-title").textContent = title || filename;
           document.getElementById("doc-author").textContent = author || "unknown author";
+          document.getElementById("doc-type-label").textContent = docType + " · " + (data.new_filename || filename);
+          originalType = docType;
+          document.getElementById("type-warning").style.display = "none";
           status.textContent = "Saved — " + data.chunks_updated + " chunks updated";
+          if (data.new_filename) {
+            filename = data.new_filename;
+            document.getElementById("download-btn").href = "/archive/download/" + encodeURIComponent(filename);
+          }
           setTimeout(function() { status.textContent = ""; }, 3000);
         } else {
           status.textContent = "Error: " + (data.error || "unknown error");
