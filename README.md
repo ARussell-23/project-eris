@@ -1,8 +1,8 @@
 # ERIS — Evidence Retrieval & Inquiry System
 
-A fully local document retrieval system built on the principle that a good system should retrieve and cite, not summarise and synthesise.
+A fully local document retrieval system built on the principle that a good system should retrieve and cite, not summarize and synthesize.
 
-ERIS is a librarian, not a synthesiser. It surfaces relevant passages from a personal document collection with precise citations and returns control to the researcher. It does not generate answers, aggregate across documents, or attempt to resolve contradictions. Null results are treated as valid, correct outputs — not failures to be papered over.
+ERIS is a librarian, not a synthesizer. It surfaces relevant passages from a personal document collection with precise citations and returns control to the researcher.
 
 Everything runs on local hardware. No documents or queries leave the machine.
 
