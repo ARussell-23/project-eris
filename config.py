@@ -10,19 +10,20 @@ CHROMA_DIR      = os.path.join(BASE_DIR, "data", "chroma")
 COLLECTION_NAME = "eris_documents"
 
 # ── Chunking ───────────────────────────────────────────────────────────────
-CHUNK_SIZE      = 400   # target characters per chunk (sentence-aware, splits at boundaries
+CHUNK_SIZE      = 400   # target characters per chunk (sentence-aware, splits at boundaries)
 CHUNK_OVERLAP   = 50    # characters of overlap between chunks
 
 # ── Embedding model ────────────────────────────────────────────────────────
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 
 # ── Ollama ─────────────────────────────────────────────────────────────────
 OLLAMA_MODEL    = "mistral:7b-instruct"
 OLLAMA_BASE_URL = "http://localhost:11434"
 
 # ── Retrieval ──────────────────────────────────────────────────────────────
-MAX_RESULTS     = 5     # maximum sources returned per query
+MAX_RESULTS     = 10    # maximum sources returned per query
 NULL_THRESHOLD  = 0.3   # minimum similarity score — below this, no result returned
+QUERY_VARIANTS  = 3     # number of query expansions for semantic search
 
 # ── Supported file types ───────────────────────────────────────────────────
 ALLOWED_EXTENSIONS = [".pdf", ".docx", ".pptx"]

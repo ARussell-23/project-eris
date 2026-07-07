@@ -18,23 +18,20 @@ FOLDER_TYPE_MAP = {
 PROGRESS_FILE = "ingest_progress.json"
 
 def load_progress():
-    """Loads the set of already-ingested filenames from the progress file."""
     if os.path.exists(PROGRESS_FILE):
         with open(PROGRESS_FILE, "r") as f:
             return set(json.load(f))
     return set()
 
 def save_progress(completed):
-    """Saves the set of completed filenames to the progress file."""
     with open(PROGRESS_FILE, "w") as f:
         json.dump(list(completed), f)
 
-def bulk_ingest(clear=False, resume=True):
+def bulk_ingest(clear=True, resume=False):
     """
     Walks each document type folder and ingests all PDFs found.
-    Logs files with missing/incomplete metadata to a review file.
-    Optionally clears the index before starting (clear=True).
-    Optionally resumes from a previous run (resume=True).
+    clear=True wipes the existing index before starting (default for re-index).
+    resume=False starts fresh (default for re-index).
     """
     if clear:
         from ingest.store import get_collection
@@ -47,7 +44,6 @@ def bulk_ingest(clear=False, resume=True):
         except Exception:
             print("No existing index found — starting fresh.")
         client.get_or_create_collection(COLLECTION_NAME)
-        # Clear progress file too when clearing index
         if os.path.exists(PROGRESS_FILE):
             os.remove(PROGRESS_FILE)
         print()
@@ -76,7 +72,6 @@ def bulk_ingest(clear=False, resume=True):
         print(f"\n── {doc_type}S ({len(files)} files) ──────────────────────")
 
         for i, filename in enumerate(files):
-            # Skip already completed files if resuming
             if resume and filename in completed:
                 skipped += 1
                 continue
@@ -94,7 +89,6 @@ def bulk_ingest(clear=False, resume=True):
 
                 metadata = extract_metadata(pdf_path, doc_type)
 
-                # Flag incomplete metadata for later review
                 if not metadata["title"] or not metadata["author"]:
                     flagged.append({
                         "filename": filename,
@@ -122,7 +116,6 @@ def bulk_ingest(clear=False, resume=True):
                 total_chunks += stored
                 total_files += 1
 
-                # Mark as completed and save progress
                 completed.add(filename)
                 save_progress(completed)
 
@@ -133,7 +126,6 @@ def bulk_ingest(clear=False, resume=True):
                 print(f"    ✗ Failed: {e}")
                 failed.append({"filename": filename, "error": str(e)})
 
-    # Write flagged metadata to CSV for review
     if flagged:
         with open(flag_file, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["filename", "doc_type", "title", "author", "folder"])
@@ -153,12 +145,9 @@ def bulk_ingest(clear=False, resume=True):
         for f in failed:
             print(f"  - {f['filename']}: {f['error']}")
 
-    # Clean up progress file on successful completion
     if not failed and os.path.exists(PROGRESS_FILE):
         os.remove(PROGRESS_FILE)
         print("\nProgress file cleared — full ingestion complete.")
 
 if __name__ == "__main__":
-    # Set clear=True to wipe and rebuild from scratch
-    # Set resume=True to pick up where a previous run left off
-    bulk_ingest(clear=False, resume=True)
+    bulk_ingest(clear=True, resume=False)

@@ -6,12 +6,14 @@ ERIS is a librarian, not a synthesiser. It surfaces relevant passages from a per
 
 Everything runs on local hardware. No documents or queries leave the machine.
 
+A special thank you to Mo Goltz who kindly donated his expansive design library to build ERIS. This project wouldn't exist without it.
+
 ---
 
 ## Modules
 
 ### G.U.I.D.E. — Guided Understanding through Indexed Document Exploration
-Semantic search interface powered by a locally-hosted Mistral model via Ollama. Surfaces relevant passages with source citations. Responses stream word by word. Operates within a defined persona: precise, dry, comfortable returning nothing when nothing genuinely matches.
+Semantic search interface powered by a locally-hosted Mistral model via Ollama. Surfaces relevant passages with source citations. Responses stream word by word. Operates within a defined persona: precise, dry, comfortable returning nothing when nothing genuinely matches. Queries are silently expanded into multiple semantic variants before retrieval.
 
 ### A.R.C.H.I.V.E. — Aggregated Reference Collection: Housed in an Indexed Vault for Evidence
 Browsable document library with two modes:
@@ -41,7 +43,7 @@ Document processing pipeline and upload interface. Accepts PDF, DOCX, and PPTX f
 |---|---|
 | PDF extraction | PyMuPDF |
 | Text chunking | nltk (punkt_tab, sentence-aware) |
-| Embeddings | Sentence Transformers (all-MiniLM-L6-v2) |
+| Embeddings | Sentence Transformers (BAAI/bge-small-en-v1.5) |
 | Vector store | ChromaDB (persistent) |
 | Full-text search | SQLite FTS5 |
 | LLM inference | Ollama (local) |
@@ -264,7 +266,7 @@ project_eris/
 │   ├── pdf_extract.py      # PDF text extraction
 │   └── store.py            # Embedding, ChromaDB and SQLite storage
 ├── retrieval/
-│   └── search.py           # Semantic vector search
+│   └── search.py           # Semantic vector search with query expansion
 ├── guide/
 │   ├── prompt.py           # GUIDE system prompt and citation formatting
 │   └── response.py         # Ollama LLM orchestration with streaming

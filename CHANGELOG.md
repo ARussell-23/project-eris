@@ -14,6 +14,8 @@
 - 435 documents indexed (17 image-based PDFs skipped, unchanged)
 - 893,716 chunks in ChromaDB and SQLite
 
+---
+
 ## v0.3.0 — 2026-06-25
 
 ### Added
