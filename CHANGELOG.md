@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.4.0 — 2026-07-07
+
+### Changed
+- Embedding model upgraded from `all-MiniLM-L6-v2` to `BAAI/bge-small-en-v1.5` — better intent-based retrieval, less keyword-driven results
+- MAX_RESULTS increased from 5 to 10
+- Full re-index of all 451 documents under new embedding model
+
+### Added
+- Query expansion — each search query is silently expanded into 3 semantic variants before hitting ChromaDB; results are deduplicated by highest similarity score, improving retrieval for intent-based queries
+
+### Collection
+- 435 documents indexed (17 image-based PDFs skipped, unchanged)
+- 893,716 chunks in ChromaDB and SQLite
+
 ## v0.3.0 — 2026-06-25
 
 ### Added
